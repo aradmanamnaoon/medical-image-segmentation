@@ -70,7 +70,6 @@ Example prediction:
 
 Clone the repository:
 
-```bash
 git clone https://github.com/aradmanamnaoon/medical-image-segmentation.git
 
 cd medical-image-segmentation
