@@ -2,18 +2,6 @@
 
 A deep learning project for automatic cardiac MRI segmentation using a 3D U-Net architecture with PyTorch and MONAI.
 
-<p align="center">
-  <img src="results/figures/la_024_result.png" width="900">
-</p>
-
-<h1 align="center">
-3D Cardiac MRI Segmentation using PyTorch & MONAI
-</h1>
-
-<p align="center">
-A deep learning pipeline for automatic cardiac MRI segmentation using a 3D U-Net architecture.
-</p>
-
 ## Overview
 
 This project implements a complete medical image segmentation pipeline, including:
