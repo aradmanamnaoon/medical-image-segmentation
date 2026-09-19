@@ -1,0 +1,44 @@
+Project:
+3D Cardiac MRI Segmentation using PyTorch and MONAI
+
+
+Dataset:
+Medical Segmentation Decathlon - Task02 Heart
+
+
+Model:
+3D U-Net
+
+
+Task:
+Automatic segmentation of cardiac structures from MRI volumes
+
+
+Training:
+Epochs: 100
+Optimizer: AdamW
+Loss: DiceCELoss
+Mixed Precision: AMP (FP16)
+
+
+Hardware:
+NVIDIA RTX 4070 Laptop GPU
+
+
+Best Validation Dice:
+0.8821
+
+
+Best Epoch:
+92
+
+
+Inference:
+Sliding window inference
+
+
+Frameworks:
+PyTorch
+MONAI
+Nibabel
+CUDA

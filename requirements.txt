@@ -1,0 +1,16 @@
+torch
+torchvision
+torchaudio
+
+monai
+
+numpy
+scipy
+
+nibabel
+
+matplotlib
+
+tqdm
+
+pyyaml

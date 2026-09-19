@@ -1,0 +1,35 @@
+data:
+  root: ./data/Task02_Heart
+
+training:
+  epochs: 100
+  batch_size: 1
+  learning_rate: 0.0001
+  weight_decay: 0.00001
+
+model:
+  spatial_dims: 3
+  in_channels: 1
+  out_channels: 2
+  channels:
+    - 16
+    - 32
+    - 64
+    - 128
+    - 256
+  strides:
+    - 2
+    - 2
+    - 2
+    - 2
+
+patch:
+  size:
+    - 128
+    - 128
+    - 96
+  samples_per_image: 4
+
+system:
+  num_workers: 4
+  seed: 42
