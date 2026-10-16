@@ -34,6 +34,9 @@ CHECKPOINT_PATH = (
     / "best_model.pth"
 )
 
+# Ensure the destination exists before saving the first improved model.
+CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
+
 
 
 # ============================================================
