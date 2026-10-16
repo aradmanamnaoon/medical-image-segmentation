@@ -1,4 +1,3 @@
-from IPython.core.magics import config
 from pathlib import Path
 import random
 
@@ -58,6 +57,18 @@ def get_dataloaders(config):
 
     print(f"Found {len(image_files)} images")
     print(f"Found {len(label_files)} labels")
+
+    # Fail closed: never silently drop or mismatch MRI/label pairs.
+    if not image_files or len(image_files) != len(label_files):
+        raise ValueError(
+            "Expected matching, non-empty imagesTr and labelsTr NIfTI files"
+        )
+    if any(image.name != label.name for image, label in zip(image_files, label_files)):
+        raise ValueError("Image and label basenames must match one-to-one")
+    if len(image_files) <= 16:
+        raise ValueError(
+            "At least 17 paired cases are needed for the existing 16-case training split"
+        )
 
 
 
