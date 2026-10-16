@@ -76,3 +76,8 @@ Thumbs.db
 # ==========================
 
 *.swp
+# Local, potentially identifying split/group metadata (never publish)
+manifests/
+*patient*manifest*.csv
+*split_manifest*.csv
+*patient*split*.csv
