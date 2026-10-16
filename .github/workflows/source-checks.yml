@@ -22,6 +22,8 @@ jobs:
           python-version: '3.12'
       - name: Parse Python source files
         run: python -m compileall -q src
+      - name: Synthetic patient/group split audit tests
+        run: python -m unittest discover -s tests -v
       - name: Check required source and documentation structure
         run: |
           python - <<'PY'
