@@ -6,6 +6,9 @@ This repository contains Python source for loading cardiac MRI NIfTI volumes, ap
 
 > **Evidence boundary:** The best validation Dice of **0.8821** (epoch **92**) is recorded in the [project's author-generated training summary](results/training_summary.txt). It has not been independently reproduced in this audit. There is no claim of clinical validation, external generalizability, or readiness for diagnosis or treatment.
 
+**New reviewer?** [Review the code and evidence in 10 minutes](docs/REVIEWER_GUIDE.md), even without obtaining medical images or running a GPU training job. Feedback is welcome on method clarity, reproducibility and split independence; please do not submit patient data.
+
+
 ## Scope: what this model segments
 
 The [model definition](src/model.py) uses **one input channel and two output classes**: **background** and **left atrium**. This repository does **not** substantiate claims that this specific training run segmented left/right ventricles, myocardium, or that it trained UNETR or Swin UNETR models.
