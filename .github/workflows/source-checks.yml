@@ -1,0 +1,49 @@
+name: Source syntax and repository integrity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Parse Python source files
+        run: python -m compileall -q src
+      - name: Check required source and documentation structure
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          required = (
+              "README.md", "requirements.txt", "configs/config.yaml",
+              "src/dataset.py", "src/model.py", "src/train.py",
+              "src/inference.py", "src/visualize.py",
+              "results/training_summary.txt",
+          )
+          missing = [name for name in required if not Path(name).is_file()]
+          if missing:
+              raise SystemExit(f"Required project files missing: {missing}")
+
+          summary = Path("results/training_summary.txt").read_text(encoding="utf-8")
+          assert "0.8821" in summary, "Reported score source missing"
+          readme = Path("README.md").read_text(encoding="utf-8").lower()
+          assert "author-reported" in readme
+          assert "not a medical device" in readme
+          print("Syntax and structure checks passed.")
+          PY
+
+# These checks never download patient data, run model inference,
+# retrain the model, or reproduce a clinical/scientific metric.
