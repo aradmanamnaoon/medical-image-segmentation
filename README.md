@@ -52,6 +52,27 @@ The following commands are documentation for researchers running the project the
 
 **Important:** The requirements are not pinned to independently verified versions, and the committed repository contains neither the original MRI dataset nor a published validated checkpoint. PyTorch checkpoint deserialization must not be performed on untrusted files. Hardware, MONAI/PyTorch versions, paths and available memory can affect run success.
 
+## Optional group-level manifest audit (synthetic tests, no data transfer)
+
+The training code currently shuffles cases and creates a **case-level** split. Filenames alone do not prove that different cases belong to different patients. The new standard-library-only [`tools/split_audit.py`](tools/split_audit.py) checks a **local, separately supplied** CSV of case-to-patient assignments:
+
+```text
+case_id,patient_id,split
+case01,group_a,train
+case02,group_a,train
+case03,group_b,val
+```
+
+Store the real manifest outside version control (the `manifests/` directory is ignored), then run:
+
+```bash
+python tools/split_audit.py --manifest manifests/research_split.csv
+```
+
+The CLI prints **counts only**, not patient IDs. It rejects missing group IDs, duplicate case IDs, unrecognized split names, empty/missing train or validation groups, and patient/group overlap across train/val/test. It cannot certify that the supplied pseudonymous patient IDs correctly reflect original clinical identities, and it is **not** connected automatically to the 0.8821 run or existing `get_dataloaders` split. Passing it is **not scientific validation**.
+
+The GitHub Actions test suite exercises this validator using **synthetic CSV strings only**. No patient data or trained model is uploaded to CI.
+
 ## Results and interpretation
 
 | Item | What is actually documented |
