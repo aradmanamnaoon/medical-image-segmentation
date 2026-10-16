@@ -1,91 +1,95 @@
-# 3D Cardiac MRI Segmentation using PyTorch & MONAI
+# 3D Cardiac MRI Segmentation
 
-A deep learning project for automatic cardiac MRI segmentation using a 3D U-Net architecture with PyTorch and MONAI.
+**Research-oriented, two-class left-atrium segmentation with PyTorch and MONAI.**
 
-## Overview
+This repository contains Python source for loading cardiac MRI NIfTI volumes, applying volumetric transforms, training a 3D U-Net, performing sliding-window inference, and visualizing predictions on the **Medical Segmentation Decathlon (MSD) Task02 Heart** dataset.
 
-This project implements a complete medical image segmentation pipeline, including:
+> **Evidence boundary:** The best validation Dice of **0.8821** (epoch **92**) is recorded in the [project's author-generated training summary](results/training_summary.txt). It has not been independently reproduced in this audit. There is no claim of clinical validation, external generalizability, or readiness for diagnosis or treatment.
 
-- NIfTI (`.nii.gz`) medical image loading
-- MONAI-based preprocessing
-- 3D U-Net model training
-- Dice coefficient evaluation
-- Sliding window inference
-- Segmentation visualization
+## Scope: what this model segments
 
-The goal is to predict voxel-level segmentation masks from cardiac MRI volumes.
+The [model definition](src/model.py) uses **one input channel and two output classes**: **background** and **left atrium**. This repository does **not** substantiate claims that this specific training run segmented left/right ventricles, myocardium, or that it trained UNETR or Swin UNETR models.
 
----
+The dataset is not redistributed with this repository. Obtain MSD Task02 Heart from an authorized source and follow its usage terms.
 
-## Dataset
+## Architecture and workflow
 
-**Medical Segmentation Decathlon - Task02 Heart**
+| Component | Source | Current documented configuration |
+| --- | --- | --- |
+| Data and split | [src/dataset.py](src/dataset.py) | Filename-matched NIfTI image/label pairs; deterministic shuffled split with seed 42; first 16 pairs train, remaining pairs validation |
+| Input transformations | [src/dataset.py](src/dataset.py) | RAS orientation, 1.25 mm isotropic spacing, nonzero intensity normalization, random positive/negative label-centered training crops |
+| Model | [src/model.py](src/model.py) | MONAI 3D U-Net with channels (16,32,64,128,256), strides (2,2,2,2), 2 residual units |
+| Training | [src/train.py](src/train.py) | AdamW, DiceCELoss, nominal 100 epochs, mini-batch size 1, configured patch (128,128,96) |
+| Evaluation | [src/train.py](src/train.py) | Sliding-window validation inference, DiceMetric excluding background; best checkpoint saved when the observed Dice improves |
+| Inference | [src/inference.py](src/inference.py) | Loads the best checkpoint and predicts the specifically configured `la_024.nii.gz` example |
+| Visualization | [src/visualize.py](src/visualize.py) | Builds a three-panel MRI/label/prediction plot |
 
-The dataset contains cardiac MRI volumes and corresponding segmentation labels.
+The [YAML configuration](configs/config.yaml) documents the nominal hyperparameters. The evaluation score is tied to the original, unarchived environment and is **not** established as reproducible simply because scripts are public.
 
-Dataset format:
-.nii.gz
+## Repository layout
 
-The dataset is not included in this repository due to size limitations.
+```text
+configs/config.yaml       experiment configuration
+src/dataset.py            data loading and split
+src/model.py              MONAI 3D U-Net
+src/train.py              training and validation
+src/inference.py          single-case inference
+src/visualize.py          example plot
+results/training_summary.txt  author-reported run summary
+results/figures/         example image
+```
 
----
+The original training summary lists an **NVIDIA RTX 4070 Laptop GPU**. This information is author-recorded provenance, not independent run verification.
 
-## Model
+## Reproducing the workflow (for users with permitted data and compute)
 
-Architecture:
+The following commands are documentation for researchers running the project themselves; **they have not been executed as part of this audit**. Set up a compatible isolated Python environment and read the requirements before use.
 
-**3D U-Net**
+1. Obtain the MSD Task02 Heart dataset under its original terms, with matched files at `data/Task02_Heart/imagesTr/*.nii.gz` and `data/Task02_Heart/labelsTr/*.nii.gz`. The current split function requires at least 17 paired cases and rejects missing or mismatched names.
+2. From the repository root, install dependencies from `requirements.txt` into your chosen environment.
+3. Run `python src/train.py` after checking the configuration and available GPU memory. The script creates `checkpoints/best_model.pth` as needed.
+4. Run `python src/inference.py` only after a compatible, **trusted** checkpoint exists and its hardcoded `la_024.nii.gz` input is available. Then `python src/visualize.py` for the figure.
 
-Features:
+**Important:** The requirements are not pinned to independently verified versions, and the committed repository contains neither the original MRI dataset nor a published validated checkpoint. PyTorch checkpoint deserialization must not be performed on untrusted files. Hardware, MONAI/PyTorch versions, paths and available memory can affect run success.
 
-- 3D convolution layers
-- Encoder-decoder architecture
-- Skip connections
-- Multi-scale feature extraction
+## Results and interpretation
 
-Training configuration:
+| Item | What is actually documented |
+| --- | --- |
+| Best validation Dice | **0.8821**, reported by the project author |
+| Best epoch | **92**, according to [results/training_summary.txt](results/training_summary.txt) |
+| Training configuration | Nominal 100 epochs, AdamW, DiceCELoss, mixed precision |
+| External test cohort / clinical evaluation | **Not established** |
+| Independent reproduction of original score | **Not established** |
+| Original model checkpoint and full per-case predictions | **Not included in the audited repository** |
 
-Optimizer: AdamW
-Loss: DiceCELoss
-Epochs: 100
-Mixed Precision: AMP (FP16)
-Inference: Sliding Window
+![Author-provided prediction illustration](results/figures/la_024_result.png)
 
+The figure is an author-provided project artifact, **not** proof of clinical correctness or an independently reviewed external benchmark.
 
----
+## Reproducibility and scientific gaps
 
-## Results
+Before promoting the Dice score as a comparable research result, the repository needs:
 
-**Author-reported best validation Dice: 0.8821.** This figure is stated in the project README; it has not been independently reproduced in this documentation. The README does not establish the exact patient-level split, seed, evaluation script/commit, held-out cohort, or external-test performance. Do not treat the number as a validated comparative benchmark.
+- A versioned model/checkpoint and dataset source **without redistributing any unauthorized patient material**.
+- A stable case-level split manifest with data identifiers, a documented split method, and an assessment of leakage at the patient/study level.
+- Version-pinned software and environment metadata, random seeds, hardware details, model configuration and training command.
+- A validation script and per-case results that a third party can run; ideally an independent external dataset and a strong conventional baseline.
+- Inspection of image/label matching, spacing, orientation, output-affine consistency and class definitions.
+- Proper license determination for original source code, third-party dependencies, annotations and example figures, plus disclosure of material AI assistance and human contribution roles.
 
+**Do not interpret the absence of observed train/validation overlap as proof of leakage-free patient-level evaluation.** This code pairs files by name and uses a shuffled case-level split; patient/group independence has not been independently established.
 
-Example prediction:
+## Responsible use and licensing
 
-![Segmentation Result](results/figures/la_024_result.png)
+This is **experimental research software**, not a medical device or clinical decision-support tool. Use only properly authorized, de-identified research data. Avoid publishing identifiable images, patient IDs, or private medical records. Generated masks require qualified validation for any consequential use.
 
----
+No root license file was present in the audited repository inventory. **No permission to reuse or redistribute the original code is implied by public GitHub access.** The copyright holder must choose and approve any project license; third-party datasets/models may have separate terms.
 
-## Installation
+## Related work
 
-Clone the repository:
+- [Public technical and research profile](https://github.com/aradmanamnaoon/aradmanamnaoon/blob/main/RESEARCH_PROFILE.md)
+- [CohortSeal — patient/group split integrity](https://github.com/aradmanamnaoon/cohortseal)
+- [Portfolio case study](https://aradmanamnaoon.github.io/projects/3d-cardiac-mri-segmentation/)
 
-git clone https://github.com/aradmanamnaoon/medical-image-segmentation.git
-
-cd medical-image-segmentation
-
-## Install dependencies:
-
-pip install -r requirements.txt
-
-
----
-
-## Evidence boundaries and responsible use
-
-This repository documents an exploratory segmentation pipeline for the Medical Segmentation Decathlon Task02 Heart dataset. It is **research software, not a clinically validated or regulated medical device**. No patient-care, diagnosis, or deployment claim is made.
-
-Before using the reported Dice value in a publication, grant, academic application, or benchmark comparison, preserve and independently check the exact evaluation script, dataset version, patient-level split definition, checkpoint identifier, inference settings, random seed, full per-case results, and environment. If any of these artifacts are unavailable, describe the value only as an *unreplicated, author-reported validation result*. The absence of test-set and external-site validation limits claims of generalizability.
-
-**Data and privacy:** The dataset is not distributed in this repository. Obtain it from its original authorized source and comply with its terms; do not upload identifiable medical images or derived patient records to public issues, logs, or repositories.
-
-**Contribution provenance:** GitHub hosting demonstrates the existence of this project, but does not independently verify individual authorship contributions, clinical performance, or third-party adoption. AI-assisted contributions and third-party code/data should be disclosed in a future citable release where applicable.
+*Documentation audit updated 2026-10-16. Source-linked behavior is distinguished from author-reported experimental outcomes.*
